@@ -2,7 +2,9 @@ name: Pipeline
 
 on:
   push:
-
+    branches: [main, develop, feature/*]
+  pull_request:
+    branches: [main, develop, feature/*]
 permissions:
   contents: write
   actions: read
@@ -47,6 +49,18 @@ jobs:
       ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.ref }}
     secrets: inherit
 
+  docker-scan-deploy:
+    name: Run Docker Scan & Deploy
+    needs:
+      - code-style
+      - type-check
+      - run-tests
+      - check-deps
+    uses: ./.github/workflows/docker.yml
+    with:
+      ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.ref }}
+    secrets: inherit
+
   all-passed:
     name: Check Build Status
     runs-on: ubuntu-latest
@@ -56,6 +70,7 @@ jobs:
       - type-check
       - run-tests
       - check-deps
+      - docker-scan-deploy
     steps:
       - name: Harden runner
         uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
