@@ -49,11 +49,14 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copy standalone build
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./app/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./app/public
 
 # Switch to non-root user
 USER nextjs
+
+# Run the standalone server from the app directory (Next.js output layout)
+WORKDIR /app/app
 
 # Expose port
 EXPOSE 3000
