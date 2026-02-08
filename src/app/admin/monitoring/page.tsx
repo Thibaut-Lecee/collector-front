@@ -31,6 +31,27 @@ const DASHBOARDS: DashboardConfig[] = [
     to: 'now',
   },
   {
+    id: 'api-metrics',
+    title: 'Metrics API',
+    description: "Métriques de l'API via Prometheus (RPS, latences, erreurs, CPU/RAM)",
+    dashboardUid: 'api-metrics',
+    dashboardSlug: 'api-metrics',
+    refresh: '5s',
+    from: 'now-15m',
+    to: 'now',
+  },
+  {
+    id: 'k6-overview',
+    title: 'Load tests (k6)',
+    description:
+      "Vue k6 (VUs, throughput, latences) envoyée dans Prometheus via remote write. Lance `make k6-load` pour alimenter les graphes.",
+    dashboardUid: 'k6-overview',
+    dashboardSlug: 'k6-overview',
+    refresh: '5s',
+    from: 'now-15m',
+    to: 'now',
+  },
+  {
     id: 'explore',
     title: 'Exploration',
     description: "Interface d'exploration des logs avec LogQL",
@@ -51,6 +72,10 @@ export default function MonitoringPage() {
     (process.env.NEXT_PUBLIC_GRAFANA_URL || 'http://localhost:3002')
       .trim()
       .replace(/\/$/, '') || 'http://localhost:3002';
+  const prometheusBaseUrl =
+    (process.env.NEXT_PUBLIC_PROMETHEUS_URL || 'http://localhost:9090')
+      .trim()
+      .replace(/\/$/, '') || 'http://localhost:9090';
   const idPayload = session?.idToken ? decodeJwtPayload(session.idToken) : null;
   const accessPayload = session?.accessToken
     ? decodeJwtPayload(session.accessToken)
@@ -113,28 +138,52 @@ export default function MonitoringPage() {
               </p>
             </div>
             {isAdmin && (
-              <a
-                href={grafanaBaseUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
-                title="Ouvrir Grafana"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div className="flex items-center gap-2">
+                <a
+                  href={grafanaBaseUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                  title="Ouvrir Grafana"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 3h7v7m0-7L10 14m-4 7H3v-3"
-                  />
-                </svg>
-                Ouvrir Grafana
-              </a>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14 3h7v7m0-7L10 14m-4 7H3v-3"
+                    />
+                  </svg>
+                  Ouvrir Grafana
+                </a>
+                <a
+                  href={prometheusBaseUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+                  title="Ouvrir Prometheus"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14 3h7v7m0-7L10 14m-4 7H3v-3"
+                    />
+                  </svg>
+                  Ouvrir Prometheus
+                </a>
+              </div>
             )}
           </div>
 
