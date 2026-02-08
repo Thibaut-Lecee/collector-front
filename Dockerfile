@@ -1,7 +1,7 @@
 # -----------------------
 # Build Stage
 # -----------------------
-FROM node:24-alpine AS builder
+FROM node:25-alpine AS builder
 
 ENV NODE_ENV=production
 ENV PNPM_HOME="/pnpm"
@@ -27,7 +27,7 @@ RUN pnpm run build
 # -----------------------
 # Production Stage
 # -----------------------
-FROM node:24-alpine AS runner
+FROM node:25-alpine AS runner
 
 ENV NODE_ENV=production
 
