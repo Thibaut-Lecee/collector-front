@@ -28,9 +28,9 @@ export default function Home() {
     setFetchError(null);
 
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${apiUrl}/v1/articles/findAll`);
+      // Use a relative path so the app works behind Ingress (collector.local) without
+      // baking environment-specific hostnames into the client bundle.
+      const response = await fetch('/api/v1/articles/findAll');
 
       if (response.status === 204) {
         setProducts([]);

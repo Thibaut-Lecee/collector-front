@@ -68,14 +68,22 @@ export default function MonitoringPage() {
   const [selectedDashboard, setSelectedDashboard] = useState<DashboardConfig>(
     DASHBOARDS[0],
   );
+  const defaultGrafanaBaseUrl =
+    process.env.NODE_ENV === 'production'
+      ? '/internal/grafana'
+      : 'http://localhost:3002';
   const grafanaBaseUrl =
-    (process.env.NEXT_PUBLIC_GRAFANA_URL || 'http://localhost:3002')
+    (process.env.NEXT_PUBLIC_GRAFANA_URL || defaultGrafanaBaseUrl)
       .trim()
-      .replace(/\/$/, '') || 'http://localhost:3002';
+      .replace(/\/$/, '') || defaultGrafanaBaseUrl;
+  const defaultPrometheusBaseUrl =
+    process.env.NODE_ENV === 'production'
+      ? '/metrics'
+      : 'http://localhost:9090';
   const prometheusBaseUrl =
-    (process.env.NEXT_PUBLIC_PROMETHEUS_URL || 'http://localhost:9090')
+    (process.env.NEXT_PUBLIC_PROMETHEUS_URL || defaultPrometheusBaseUrl)
       .trim()
-      .replace(/\/$/, '') || 'http://localhost:9090';
+      .replace(/\/$/, '') || defaultPrometheusBaseUrl;
   const idPayload = session?.idToken ? decodeJwtPayload(session.idToken) : null;
   const accessPayload = session?.accessToken
     ? decodeJwtPayload(session.accessToken)

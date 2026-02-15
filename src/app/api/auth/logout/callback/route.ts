@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+function getPublicBaseUrl(request: NextRequest): string {
+  const configured = process.env.NEXTAUTH_URL?.trim();
+  if (configured) {
+    try {
+      return new URL(configured).toString();
+    } catch {
+      // ignore invalid NEXTAUTH_URL and fall back to request origin
+    }
+  }
+
+  return request.nextUrl.origin;
+}
+
 /**
  * Handles the callback from an external Identity Provider (IdP) after a user
  * signs out. This endpoint is responsible for validating the logout request to
@@ -20,7 +33,7 @@ export async function GET(request: NextRequest) {
   const logoutStateCookie = cookieStore.get('logout_state');
 
   if (state && logoutStateCookie && state === logoutStateCookie.value) {
-    const successUrl = new URL('/logout/success', request.url);
+    const successUrl = new URL('/logout/success', getPublicBaseUrl(request));
     const response = NextResponse.redirect(successUrl);
 
     response.headers.set('Clear-Site-Data', '"cookies"');
@@ -38,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } else {
-    const errorUrl = new URL('/logout/error', request.url);
+    const errorUrl = new URL('/logout/error', getPublicBaseUrl(request));
     errorUrl.searchParams.set('reason', 'Invalid or missing state parameter.');
     return NextResponse.redirect(errorUrl);
   }

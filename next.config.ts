@@ -38,6 +38,19 @@ const nextConfig: NextConfig = {
       : apiPublicUrl.replace(/\/api\/?$/, '');
 
     return [
+      // Backend API routes. Keep NextAuth under `/api/auth/*` on the frontend.
+      {
+        source: '/api/v1/:path*',
+        destination: `${apiOrigin}/api/v1/:path*`,
+      },
+      {
+        source: '/api-docs/:path*',
+        destination: `${apiOrigin}/api-docs/:path*`,
+      },
+      {
+        source: '/metrics',
+        destination: `${apiOrigin}/metrics`,
+      },
       {
         source: '/internal/grafana/:path*',
         destination: `${apiOrigin}/internal/grafana/:path*`,
