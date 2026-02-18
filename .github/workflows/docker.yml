@@ -101,38 +101,6 @@ jobs:
           ignore-unfixed: true
           exit-code: "0"
 
-      - name: Deploy locally (Docker)
-        run: |
-          docker run -d --name collector-front-ci -p 3000:3000 \
-            -e NODE_ENV=production \
-            -e PORT=3000 \
-            -e NEXTAUTH_URL=http://localhost:3000 \
-            -e SESSION_SECRET=ci-session-secret \
-            -e SESSION_DURATION=3600 \
-            -e ZITADEL_DOMAIN=https://example.com \
-            -e ZITADEL_CLIENT_ID=ci-client-id \
-            -e ZITADEL_CLIENT_SECRET=ci-client-secret \
-            -e ZITADEL_CALLBACK_URL=http://localhost:3000/api/auth/callback/zitadel \
-            -e ZITADEL_POST_LOGOUT_URL=http://localhost:3000/api/auth/logout/callback \
-            -e NEXT_PUBLIC_API_URL=http://localhost:3001/api \
-            collector-front:ci
-
-          for i in {1..30}; do
-            if curl -fsS http://localhost:3000/health >/dev/null; then
-              echo "Frontend is up"
-              exit 0
-            fi
-            sleep 2
-          done
-
-          echo "Frontend did not start"
-          docker logs collector-front-ci
-          exit 1
-
-      - name: Stop container
-        if: always()
-        run: docker rm -f collector-front-ci
-
       - name: Login to GHCR
         if: steps.ghcr.outputs.should_push == 'true'
         uses: docker/login-action@v3

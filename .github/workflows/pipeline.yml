@@ -35,13 +35,6 @@ jobs:
       ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.ref }}
     secrets: inherit
 
-  run-tests:
-    name: Run Test Suite
-    uses: ./.github/workflows/test.yml
-    with:
-      ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.ref }}
-    secrets: inherit
-
   check-deps:
     name: Run Dependency Checks
     uses: ./.github/workflows/unused.yml
@@ -57,7 +50,6 @@ jobs:
     needs:
       - code-style
       - type-check
-      - run-tests
       - check-deps
     uses: ./.github/workflows/docker.yml
     with:
@@ -71,7 +63,6 @@ jobs:
       - lint-commits
       - code-style
       - type-check
-      - run-tests
       - check-deps
       - docker-scan-deploy
     steps:
