@@ -29,3 +29,7 @@ node_modules
 *.jpeg
 *.gif
 *.svg
+
+# GitHub Actions workflows (avoid auto-format + auto-commit from CI)
+.github/workflows/**/*.yml
+.github/workflows/**/*.yaml

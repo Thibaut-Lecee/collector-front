@@ -48,6 +48,16 @@ jobs:
       - name: Run Formatter
         run: npm run format
 
+      - name: Revert workflow file changes (avoid workflow-permission push error)
+        if: ${{ inputs.commit_changes == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git status --porcelain .github/workflows | grep -q .; then
+            echo "::warning::Changes detected in .github/workflows; reverting (GITHUB_TOKEN cannot push workflow updates)."
+            git restore --source=HEAD --staged --worktree .github/workflows
+          fi
+
       - name: Commit Changes
         if: ${{ inputs.commit_changes == true }}
         uses: stefanzweifel/git-auto-commit-action@b863ae1933cb653a53c021fe36dbb774e1fb9403 # v5.2.0
