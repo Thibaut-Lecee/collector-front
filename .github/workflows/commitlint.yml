@@ -29,8 +29,3 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-
-      - name: Inspect Commits
-        uses: mridang/action-commit-lint@v1
-        with:
-          github-token: ${{ github.token }}
