@@ -73,7 +73,7 @@ interface GrafanaDashboardProps {
  *
  * Embeds a Grafana dashboard via a configurable base URL.
  * - `NEXT_PUBLIC_GRAFANA_URL` (recommended when Grafana is exposed, e.g. http://localhost:3002)
- * - fallback: `/internal/grafana` (API proxy)
+ * - fallback: `/internal/grafana` (Ingress path routing)
  * Only accessible to admin users.
  *
  * @example
@@ -251,7 +251,6 @@ export function GrafanaDashboard({
         src={buildDashboardUrl()}
         width="100%"
         height={height}
-        frameBorder="0"
         title="Grafana Dashboard"
         allow="fullscreen"
         className="rounded-lg shadow-lg"

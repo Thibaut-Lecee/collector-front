@@ -67,7 +67,7 @@ export function extractZitadelRoles(
     if (typeof group === 'string') roles.add(group);
   }
 
-  return Array.from(roles).sort();
+  return Array.from(roles);
 }
 
 export function hasZitadelAdminRole(
@@ -96,7 +96,6 @@ export function hasZitadelAdminRole(
           return true;
         }
       }
-      continue;
     }
   }
 

@@ -3,15 +3,15 @@
 import React from 'react';
 import { cn } from '@heroui/react';
 
-import ProductListItem from './Article-list-item';
+import ArticleListItem from './Article-list-item';
 
-type ProductGridProps = React.HTMLAttributes<HTMLDivElement> & {
+type ArticleGridProps = React.HTMLAttributes<HTMLDivElement> & {
   itemClassName?: string;
-  products: Array<React.ComponentProps<typeof ProductListItem>>;
+  articles: Array<React.ComponentProps<typeof ArticleListItem>>;
 };
 
-const ArticleGrid = React.forwardRef<HTMLDivElement, ProductGridProps>(
-  ({ itemClassName, className, products, ...props }, ref) => {
+const ArticleGrid = React.forwardRef<HTMLDivElement, ArticleGridProps>(
+  ({ itemClassName, className, articles, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -21,11 +21,11 @@ const ArticleGrid = React.forwardRef<HTMLDivElement, ProductGridProps>(
         )}
         {...props}
       >
-        {products.map((product) => (
-          <ProductListItem
-            key={product.id}
+        {articles.map((article) => (
+          <ArticleListItem
+            key={article.id}
             removeWrapper
-            {...product}
+            {...article}
             className={cn('w-full snap-start', itemClassName)}
           />
         ))}

@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@heroui/react';
 import { cn } from '@heroui/react';
 
-type ProductItem = {
+type ArticleItem = {
   id: string;
   title: string;
   price: number;
@@ -12,12 +12,12 @@ type ProductItem = {
   userId?: string;
 };
 
-type ProductListItemProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'id'> & {
+type ArticleListItemProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'id'> & {
   isPopular?: boolean;
   removeWrapper?: boolean;
-} & ProductItem;
+} & ArticleItem;
 
-const ArticleListItem = React.forwardRef<HTMLDivElement, ProductListItemProps>(
+const ArticleListItem = React.forwardRef<HTMLDivElement, ArticleListItemProps>(
   (
     { title: name, price, description, removeWrapper, className, ...props },
     ref,
@@ -64,7 +64,7 @@ const ArticleListItem = React.forwardRef<HTMLDivElement, ProductListItemProps>(
               radius="lg"
               variant={'solid'}
             >
-              Voir le produit
+              Voir l'article
             </Button>
           </div>
         </div>

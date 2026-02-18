@@ -3,10 +3,10 @@
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Input, Pagination } from '@heroui/react';
-import { useEffect, useMemo, useState } from 'react';
-import ArticleGrid from '@/components/Products/Articles';
+import { useEffect, useRef, useState } from 'react';
+import ArticleGrid from '@/components/Articles/Articles';
 
-type Product = {
+type Article = {
   id: string;
   title: string;
   description: string;
@@ -14,76 +14,127 @@ type Product = {
   userId?: string;
 };
 
+type PaginatedArticlesResponse = {
+  items: Article[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 const ITEMS_PER_PAGE = 8;
 
+async function getPaginatedArticles(
+  page: number,
+  limit: number,
+  searchQuery: string = '',
+): Promise<PaginatedArticlesResponse> {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    search: searchQuery,
+  });
+
+  // Use a relative path so the app works behind Ingress (collector.local) without
+  // baking environment-specific hostnames into the client bundle.
+  const response = await fetch(
+    `/api/v1/articles/getPaginated?${query.toString()}`,
+  );
+
+  if (response.status === 204) {
+    return {
+      items: [],
+      page,
+      limit,
+      total: 0,
+      totalPages: 0,
+    };
+  }
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = (await response.json()) as PaginatedArticlesResponse;
+
+  return {
+    ...data,
+    items: data.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      price: item.price,
+    })),
+  };
+}
+
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalArticles, setTotalArticles] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const fetchProducts = async () => {
+  const requestIdRef = useRef(0);
+  const pageCacheRef = useRef<Map<string, PaginatedArticlesResponse>>(new Map());
+
+  useEffect(() => {
+    const requestId = ++requestIdRef.current;
+
     setIsLoading(true);
     setFetchError(null);
 
-    try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${apiUrl}/v1/articles/findAll`);
-
-      if (response.status === 204) {
-        setProducts([]);
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      const formattedData = data.map((item: Product) => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        price: item.price,
-      }));
-      setProducts(formattedData);
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
-      setFetchError('Impossible de charger les produits pour le moment.');
-    } finally {
+    const normalizedSearchQuery = searchQuery.trim();
+    const cacheKey = `${currentPage}:${normalizedSearchQuery}`;
+    const cachedPage = pageCacheRef.current.get(cacheKey);
+    if (cachedPage) {
+      setArticles(cachedPage.items);
+      setTotalPages(cachedPage.totalPages);
+      setTotalArticles(cachedPage.total);
       setIsLoading(false);
     }
-  };
 
-  useEffect(() => {
-    void fetchProducts();
-  }, []);
+    const load = async () => {
+      try {
+        const pageData =
+          cachedPage ??
+          (await getPaginatedArticles(
+            currentPage,
+            ITEMS_PER_PAGE,
+            normalizedSearchQuery,
+          ));
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+        if (requestIdRef.current !== requestId) return;
 
-  const filteredProducts = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return products;
+        if (!cachedPage) pageCacheRef.current.set(cacheKey, pageData);
 
-    return products.filter((product) => {
-      return (
-        product.title.toLowerCase().includes(query) ||
-        product.description.toLowerCase().includes(query)
-      );
-    });
-  }, [products, searchQuery]);
+        if (pageData.totalPages > 0 && currentPage > pageData.totalPages) {
+          setCurrentPage(pageData.totalPages);
+          return;
+        }
 
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+        setArticles(pageData.items);
+        setTotalPages(pageData.totalPages);
+        setTotalArticles(pageData.total);
+      } catch (error) {
+        if (requestIdRef.current !== requestId) return;
 
-  const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, end);
-  }, [currentPage, filteredProducts]);
+        console.error('Failed to fetch articles:', error);
+        setFetchError('Impossible de charger les articles pour le moment.');
+        setArticles([]);
+        setTotalPages(0);
+        setTotalArticles(0);
+      } finally {
+        if (requestIdRef.current === requestId) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void load();
+  }, [currentPage, searchQuery]);
 
   return (
     <>
@@ -92,11 +143,11 @@ export default function Home() {
         <section className="w-full max-w-7xl space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-xl font-semibold text-default-800">
-              Nos produits
+              Nos articles
             </h1>
             <Input
               className="w-full sm:max-w-sm"
-              placeholder="Rechercher un produit..."
+              placeholder="Rechercher un article..."
               startContent={
                 <svg
                   className="h-4 w-4 text-default-400"
@@ -111,34 +162,69 @@ export default function Home() {
                 </svg>
               }
               value={searchQuery}
-              onValueChange={setSearchQuery}
+              onValueChange={(value) => {
+                pageCacheRef.current.clear();
+                setIsLoading(true);
+                setFetchError(null);
+                setArticles([]);
+                setTotalPages(0);
+                setTotalArticles(0);
+                setSearchQuery(value);
+                setCurrentPage(1);
+              }}
               isClearable
             />
           </div>
 
           <p className="text-sm text-default-500">
-            {filteredProducts.length} résultat
-            {filteredProducts.length > 1 ? 's' : ''} sur {products.length}{' '}
-            produit{products.length > 1 ? 's' : ''}
+            {totalPages > 0 ? (
+              <>
+                Page {currentPage} sur {totalPages} · {totalArticles} article
+                {totalArticles > 1 ? 's' : ''}
+              </>
+            ) : (
+              <>
+                {totalArticles} article{totalArticles > 1 ? 's' : ''}
+              </>
+            )}
           </p>
 
           {isLoading ? (
-            <p className="text-default-500">Chargement des produits...</p>
+            <p className="text-default-500">Chargement des articles...</p>
           ) : fetchError ? (
             <p className="text-danger">{fetchError}</p>
-          ) : filteredProducts.length === 0 ? (
+          ) : totalArticles === 0 ? (
             <p className="text-default-500">
-              Aucun produit ne correspond à votre recherche.
+              {searchQuery.trim()
+                ? "Aucun article ne correspond à votre recherche."
+                : "Aucun article disponible pour le moment."}
             </p>
           ) : (
             <>
-              <ArticleGrid products={paginatedProducts} />
+              <ArticleGrid articles={articles} />
               {totalPages > 1 && (
-                <div className="flex justify-center py-4">
+                <div className="flex flex-col items-center justify-between gap-3 rounded-large bg-content1 px-4 py-3 shadow-small sm:flex-row">
+                  <p className="text-small text-default-500">
+                    Page {currentPage} sur {totalPages}
+                  </p>
                   <Pagination
                     page={currentPage}
                     total={totalPages}
+                    siblings={1}
+                    boundaries={1}
+                    variant="bordered"
+                    radius="full"
+                    color="primary"
                     showControls
+                    showShadow
+                    isDisabled={isLoading}
+                    classNames={{
+                      wrapper: 'gap-1',
+                      item: 'min-w-9 h-9 text-small font-medium',
+                      cursor: 'min-w-9 h-9',
+                      prev: 'min-w-9 h-9',
+                      next: 'min-w-9 h-9',
+                    }}
                     onChange={setCurrentPage}
                   />
                 </div>
