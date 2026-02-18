@@ -33,7 +33,8 @@ const DASHBOARDS: DashboardConfig[] = [
   {
     id: 'api-metrics',
     title: 'Metrics API',
-    description: "Métriques de l'API via Prometheus (RPS, latences, erreurs, CPU/RAM)",
+    description:
+      "Métriques de l'API via Prometheus (RPS, latences, erreurs, CPU/RAM)",
     dashboardUid: 'api-metrics',
     dashboardSlug: 'api-metrics',
     refresh: '5s',
@@ -44,7 +45,7 @@ const DASHBOARDS: DashboardConfig[] = [
     id: 'k6-overview',
     title: 'Load tests (k6)',
     description:
-      "Vue k6 (VUs, throughput, latences) envoyée dans Prometheus via remote write. Lance `make k6-load` pour alimenter les graphes.",
+      'Vue k6 (VUs, throughput, latences) envoyée dans Prometheus via remote write. Lance `make k6-load` pour alimenter les graphes.',
     dashboardUid: 'k6-overview',
     dashboardSlug: 'k6-overview',
     refresh: '5s',

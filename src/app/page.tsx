@@ -78,7 +78,9 @@ export default function Home() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const requestIdRef = useRef(0);
-  const pageCacheRef = useRef<Map<string, PaginatedArticlesResponse>>(new Map());
+  const pageCacheRef = useRef<Map<string, PaginatedArticlesResponse>>(
+    new Map(),
+  );
 
   useEffect(() => {
     const requestId = ++requestIdRef.current;
@@ -196,8 +198,8 @@ export default function Home() {
           ) : totalArticles === 0 ? (
             <p className="text-default-500">
               {searchQuery.trim()
-                ? "Aucun article ne correspond à votre recherche."
-                : "Aucun article disponible pour le moment."}
+                ? 'Aucun article ne correspond à votre recherche.'
+                : 'Aucun article disponible pour le moment.'}
             </p>
           ) : (
             <>
