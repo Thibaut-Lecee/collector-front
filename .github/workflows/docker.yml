@@ -33,14 +33,27 @@ jobs:
       - name: Build Docker image
         run: docker build -t collector-front:ci .
 
-      - name: Trivy scan (collector-front)
+      # Quality gate: CRITICAL vulnerabilities fail the workflow; HIGH are reported (warning only).
+      - name: Trivy scan (collector-front) [CRITICAL - block]
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: collector-front:ci
           scan-type: image
           format: table
           vuln-type: os,library
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Trivy scan (collector-front) [HIGH - warning]
+        if: always()
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: collector-front:ci
+          scan-type: image
+          format: table
+          vuln-type: os,library
+          severity: HIGH
           ignore-unfixed: true
           exit-code: "0"
 
