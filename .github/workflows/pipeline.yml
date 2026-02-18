@@ -50,6 +50,9 @@ jobs:
     secrets: inherit
 
   docker-scan-deploy:
+    permissions:
+      contents: read
+      packages: write
     name: Run Docker Scan & Deploy
     needs:
       - code-style

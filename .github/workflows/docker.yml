@@ -13,6 +13,7 @@ defaults:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   docker-scan-deploy:
@@ -30,8 +31,47 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - name: Build Docker image
-        run: docker build -t collector-front:ci .
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (local)
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: collector-front:ci
+
+      - name: Prepare GHCR tags
+        id: ghcr
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          owner='${{ github.repository_owner }}'
+          repo="${GITHUB_REPOSITORY#*/}"
+          image="ghcr.io/${owner}/${repo}-front"
+
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          echo "sha_tag=${image}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "latest_tag=${image}:latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "latest_tag=" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [[ "${{ github.ref }}" == refs/heads/* ]]; then
+            echo "should_push=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_push=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "GHCR image: ${image}"
+          echo "SHA tag: ${image}:${{ github.sha }}"
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "Latest tag: ${image}:latest"
+          fi
 
       # Quality gate: CRITICAL vulnerabilities fail the workflow; HIGH are reported (warning only).
       - name: Trivy scan (collector-front) [CRITICAL - block]
@@ -46,7 +86,7 @@ jobs:
           exit-code: "1"
 
       - name: Trivy scan (collector-front) [HIGH - warning]
-        if: always()
+        if: always() && steps.build.outcome == 'success'
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: collector-front:ci
@@ -88,3 +128,24 @@ jobs:
       - name: Stop container
         if: always()
         run: docker rm -f collector-front-ci
+
+      - name: Login to GHCR
+        if: steps.ghcr.outputs.should_push == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Push image to GHCR
+        if: steps.ghcr.outputs.should_push == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker tag collector-front:ci "${{ steps.ghcr.outputs.sha_tag }}"
+          docker push "${{ steps.ghcr.outputs.sha_tag }}"
+
+          if [[ -n "${{ steps.ghcr.outputs.latest_tag }}" ]]; then
+            docker tag collector-front:ci "${{ steps.ghcr.outputs.latest_tag }}"
+            docker push "${{ steps.ghcr.outputs.latest_tag }}"
+          fi
