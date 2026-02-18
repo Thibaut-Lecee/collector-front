@@ -50,6 +50,10 @@ jobs:
 
           owner='${{ github.repository_owner }}'
           repo="${GITHUB_REPOSITORY#*/}"
+
+          # GHCR/Docker image names must be lowercase
+          owner="${owner,,}"
+          repo="${repo,,}"
           image="ghcr.io/${owner}/${repo}-front"
 
           echo "image=${image}" >> "$GITHUB_OUTPUT"
