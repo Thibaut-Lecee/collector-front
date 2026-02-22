@@ -14,12 +14,12 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@heroui/react": "^2.8.8",
-    "@tailwindcss/postcss": "^4.1.18",
-    "framer-motion": "^12.29.2",
+    "@heroui/react": "^2.8.9",
+    "@tailwindcss/postcss": "^4.2.0",
+    "framer-motion": "^12.34.3",
     "next": "^16.1.6",
-    "next-auth": "^4.24.12",
-    "openid-client": "^6.6.2",
+    "next-auth": "^4.24.13",
+    "openid-client": "^6.8.2",
     "postcss": "^8.5.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -27,15 +27,15 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@playwright/test": "^1.56.1",
-    "@types/node": "^20",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "^16.0.0",
     "eslint-config-prettier": "^10.1.8",
-    "knip": "^5.64.1",
-    "prettier": "^3.6.2",
+    "knip": "^5.85.0",
+    "prettier": "^3.8.1",
     "typescript": "^5"
   }
 }
